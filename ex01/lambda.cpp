@@ -19,13 +19,13 @@ auto matVec_generic(const std::vector<T>& A,
   std::cout << "Arguments are ok. Start calculating..." << std::endl;
 
   // the solution is a m/n x 1 matrix
-  Ex1VectorType p(o);
+  std::vector<int> p(o);
 
   for(int i=0; i<o; i++)
   {
       int e = 0;
       for(int j=0; j<n; j++)
-          e += accumulator(e, binaryOp(A.at(i*n+j), x.at(j)));
+          e = accumulator(e, binaryOp(A.at(i*n+j), x.at(j)));
       p.at(i)=e;
   }
   return p;
