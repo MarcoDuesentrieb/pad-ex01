@@ -52,10 +52,8 @@ Ex1VectorType matVec(const Ex1VectorType& A,
   
     for(int i=0; i<o; i++)
     {
-        int e = 0;
         for(int j=0; j<n; j++)
-            e += A.at(i*n+j) * x.at(j);
-        p.at(i)=e;
+            p.at(i) += A.at(i*n+j) * x.at(j);
     }
     return p;
     
@@ -76,10 +74,8 @@ void matVec(Ex1VectorType& y, const Ex1VectorType& A, const Ex1VectorType& x) {
 
     for(int i=0; i<o; i++)
     {
-        int e = 0;
         for(int j=0; j<n; j++)
-            e += A.at(i*n+j) * x.at(j);
-        y.at(i)=e;
+            y.at(i) += A.at(i*n+j) * x.at(j);
     }
 
 // FINISH WRITING YOUR CODE BEFORE THIS LINE
