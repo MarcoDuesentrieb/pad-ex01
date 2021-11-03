@@ -58,6 +58,14 @@ int main() {
   };
   // START WRITING YOUR CODE AFTER THIS LINE
 
+  std::vector<int> result = matVec_generic(A, x, binaryOp, accumulator);
+  
+  std::cout << "Result:" << std::endl;
+  for(int i = 0; i < result.size(); i++) {
+    std::cout << result.at(i) << " ";
+  }
+  std::cout << std::endl;
+  
 // ----------------------------------
 // ----------------------------------
 // Happy Working wishes the ASC Team.
