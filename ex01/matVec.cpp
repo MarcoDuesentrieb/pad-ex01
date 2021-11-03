@@ -43,11 +43,22 @@ Ex1VectorType matVec(const Ex1VectorType& A,
 // START WRITING YOUR CODE AFTER THIS LINE
 
 
-// ----------------------------------
-// ----------------------------------
-// Happy Working wishes the ASC Team.
-// ----------------------------------
-// ----------------------------------
+    size_t m = A.size();
+    size_t n = x.size();
+
+    std::cout << "Arguments are ok. Start calculating..." << std::endl;
+    // the solution is a n x (m/n) matrix
+    Ex1VectorType p;
+    unsigned int i = 0;
+    for(int i=0; i<m/n; i++)
+    {
+        int e = 0;
+        for(int j=0; j<n; j++)
+            e += A.at(i*n+j) * x.at(j);
+        p.push_back(e);
+    }
+    return p;
+    
 
 
 // FINISH WRITING YOUR CODE BEFORE THIS LINE
