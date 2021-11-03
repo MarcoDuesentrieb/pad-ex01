@@ -46,8 +46,6 @@ Ex1VectorType matVec(const Ex1VectorType& A,
     size_t m = A.size();
     size_t n = x.size();
     size_t o = m/n; // size of the product p = M * x
-
-    std::cout << "Arguments are ok. Start calculating..." << std::endl;
     
     // the solution is a m/n x 1 matrix
     Ex1VectorType p(o);
@@ -72,13 +70,17 @@ void matVec(Ex1VectorType& y, const Ex1VectorType& A, const Ex1VectorType& x) {
 
 // START WRITING YOUR CODE AFTER THIS LINE
 
+    size_t m = A.size();
+    size_t n = x.size();
+    size_t o = m/n; // size of the product y = M * x
 
-// ----------------------------------
-// ----------------------------------
-// Happy Working wishes the ASC Team.
-// ----------------------------------
-// ----------------------------------
-
+    for(int i=0; i<o; i++)
+    {
+        int e = 0;
+        for(int j=0; j<n; j++)
+            e += A.at(i*n+j) * x.at(j);
+        y.at(i)=e;
+    }
 
 // FINISH WRITING YOUR CODE BEFORE THIS LINE
 }
