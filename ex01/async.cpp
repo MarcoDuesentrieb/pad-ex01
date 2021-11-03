@@ -83,6 +83,21 @@ void matVec_generic_iterator(
   // MatIterT and VecIterT might be iterators without random access.
   // START WRITING YOUR CODE AFTER THIS LINE
 
+  std::size_t ni = x.size();
+  std::size_t nj = A.size() / ni;
+  Ex1VectorType result(nj, 0);  // initializes result to 0
+  for (std::size_t j = 0; j < nj; ++j)
+    for (std::size_t i = 0; i < ni; ++i)
+      result[j] += A[ni * j + i] * x[i];
+            
+  std::size_t nA = lastA - firstA;
+  std::size_t nX = lastX - firstX;
+            
+  for (std::vector<int>::iterator itX = firstX; itX != lastX; ++itX) {
+    for(std::vector<int>::iterator itA = firstA; itA != lastA; ++itA) {
+      
+    }
+  }
 
 // ----------------------------------
 // ----------------------------------
@@ -130,8 +145,18 @@ void matVec_parallel(
   unsigned numThreads = std::min(parallelism, static_cast<unsigned>(nY));
   std::size_t delta = (nY + numThreads - 1) / numThreads;
 
+  for (std::size_t j = 0; j < nj; ++j)
+    for (std::size_t i = 0; i < ni; ++i)
+      result[j] += A[ni * j + i] * x[i];
+            
   // set up tasks
   // START WRITING YOUR CODE AFTER THIS LINE
+  std::future<void> fut;
+  
+  for(int i = 0; i < numThreads; ++i) {
+    fut = std::async(std::launch::async, matVec_generic_iterator, itResult, firstA+i*, lastA, firstX, lastX, binaryOp, accumulator, seed);
+  }
+  fut.wait()
 
 
 // ----------------------------------
