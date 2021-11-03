@@ -13,22 +13,22 @@ auto matVec_generic(const std::vector<T>& A,
   // START WRITING YOUR CODE AFTER THIS LINE
   
   size_t m = A.size();
-    size_t n = x.size();
-    size_t o = m/n; // size of the product p = M * x
+  size_t n = x.size();
+  size_t o = m/n; // size of the product p = M * x
 
-    std::cout << "Arguments are ok. Start calculating..." << std::endl;
-    
-    // the solution is a m/n x 1 matrix
-    Ex1VectorType p(o);
-  
-    for(int i=0; i<o; i++)
-    {
-        int e = 0;
-        for(int j=0; j<n; j++)
-            e += accumulator(e, binaryOp(A.at(i*n+j), x.at(j)));
-        p.at(i)=e;
-    }
-    return p;
+  std::cout << "Arguments are ok. Start calculating..." << std::endl;
+
+  // the solution is a m/n x 1 matrix
+  Ex1VectorType p(o);
+
+  for(int i=0; i<o; i++)
+  {
+      int e = 0;
+      for(int j=0; j<n; j++)
+          e += accumulator(e, binaryOp(A.at(i*n+j), x.at(j)));
+      p.at(i)=e;
+  }
+  return p;
 
 // ----------------------------------
 // ----------------------------------
