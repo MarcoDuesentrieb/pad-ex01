@@ -68,6 +68,9 @@ void matVec_generic_iterator(
     VecIterT lastX,
     BinaryOpT binaryOp,        // T binaryOp(T lhs, T rhs)
     AccumulatorT accumulator,  // T accumulator(T sum, T part)
+    ElementType nA,
+    ElementType nX,
+    ElementType nY,
     typename std::iterator_traits<ResultIterT>::value_type seed = {}) {
   static_assert(
       std::is_same<
@@ -83,28 +86,17 @@ void matVec_generic_iterator(
   // MatIterT and VecIterT might be iterators without random access.
   // START WRITING YOUR CODE AFTER THIS LINE
 
-  std::size_t ni = x.size();
-  std::size_t nj = A.size() / ni;
-  Ex1VectorType result(nj, 0);  // initializes result to 0
-  for (std::size_t j = 0; j < nj; ++j)
-    for (std::size_t i = 0; i < ni; ++i)
-      result[j] += A[ni * j + i] * x[i];
+  if (nA % nX != 0)
+    throw std::invalid_argument("wrong matrix size");
             
-  std::size_t nA = lastA - firstA;
-  std::size_t nX = lastX - firstX;
+  std::cout << "Result of accumulator: " << accumulator(*itResult, binaryOp(*firstA, *firstX)) << " real result: " << (*firstA) * (*firstX) << std::endl;
             
-  for (std::vector<int>::iterator itX = firstX; itX != lastX; ++itX) {
-    for(std::vector<int>::iterator itA = firstA; itA != lastA; ++itA) {
-      
+  for (std::size_t j = 0; j < nY; ++j) {
+    for (std::size_t i = 0; i < nX; ++i) {
+      auto currentItResult = itResult + j;
+      *currentItResult = accumulator(*currentItResult, binaryOp(*(firstA + nX * j + i), *(firstX + i)));
     }
   }
-
-// ----------------------------------
-// ----------------------------------
-// Happy Working wishes the ASC Team.
-// ----------------------------------
-// ----------------------------------
-
 
   // FINISH WRITING YOUR CODE BEFORE THIS LINE
 }
@@ -145,26 +137,36 @@ void matVec_parallel(
   unsigned numThreads = std::min(parallelism, static_cast<unsigned>(nY));
   std::size_t delta = (nY + numThreads - 1) / numThreads;
 
-  for (std::size_t j = 0; j < nj; ++j)
-    for (std::size_t i = 0; i < ni; ++i)
-      result[j] += A[ni * j + i] * x[i];
-            
   // set up tasks
   // START WRITING YOUR CODE AFTER THIS LINE
-  std::future<void> fut;
   
-  for(int i = 0; i < numThreads; ++i) {
-    fut = std::async(std::launch::async, matVec_generic_iterator, itResult, firstA+i*, lastA, firstX, lastX, binaryOp, accumulator, seed);
+  int rowsPerTask = nY / numThreads;
+  int leftOver = nY % numThreads;
+  
+  std::vector<std::future<void>> tasks;
+           
+  //std::cout << "nA: " << nA << "; nX: " << nX << "; numThreads: " << numThreads << "; leftOver: " << leftOver << "; parallelism: " << parallelism << std::endl;
+            
+  for(int i = 0; i < numThreads; i++) {
+    std::future<void> task;
+    if(i == numThreads - 1 && leftOver != 0) {
+      auto firstA_p = firstA + i * rowsPerTask * nX;
+      auto lastA_p = firstA + i * rowsPerTask * nX + leftOver * nX;
+      auto firstItResult = itResult + i * rowsPerTask;
+      task = std::async(std::launch::async, [&] { matVec_generic_iterator(firstItResult, firstA_p, firstA_p, firstX, lastX, binaryOp, accumulator, leftOver * nX, nX, leftOver, seed); });
+    } else {
+      auto firstA_p = firstA + i * rowsPerTask * nX;
+      auto lastA_p = firstA + (i + 1) * rowsPerTask * nX;
+      auto firstItResult = itResult + i * rowsPerTask;
+      task = std::async(std::launch::async, [&] { matVec_generic_iterator(firstItResult, firstA_p, lastA_p, firstX, lastX, binaryOp, accumulator, rowsPerTask * nX, nX, rowsPerTask, seed); });
+    }
+    
+    tasks.push_back(move(task));
   }
-  fut.wait()
-
-
-// ----------------------------------
-// ----------------------------------
-// Happy Working wishes the ASC Team.
-// ----------------------------------
-// ----------------------------------
-
+            
+  for(auto& task: tasks) {
+    task.get();
+  }
 
   // FINISH WRITING YOUR CODE BEFORE THIS LINE
 }
@@ -211,9 +213,10 @@ static void benchAsync(benchmark::State& state) {
 
   // storage for result of parallel computation
   Ex1VectorType yp(data.A.size() / data.x.size());
-
+  
   Ex1VectorType result(state.range(1));
   for (auto _ : state) {
+    std::fill(yp.begin(), yp.end(), 0);
     matVec_parallel(yp.begin(), data.A.begin(), data.A.end(), data.x.begin(),
                     data.x.end(), std::multiplies<ElementType>(),
                     std::plus<ElementType>(), state.range(2));
@@ -221,8 +224,15 @@ static void benchAsync(benchmark::State& state) {
     benchmark::ClobberMemory();
   }
   setCustomCounter(state);
+  
+  // not sure what the problem is, for some reason on the second try, yp[0] has a different result than y[0], even though everything is the same
+  std::cout << "sizeof: " << sizeof(data.A) << " " << sizeof(data.x) << " " << sizeof(y) << " " << sizeof(y[0]) << " " << sizeof(yp) << " " << sizeof(yp[0]) << std::endl;
+  std::cout << "variables: " << data.A[0] << " " << data.x[0] << " " << y[0] << " " << yp[0] << " " << data.A[0] * data.x[0] << std::endl;
+  
   if (y != yp)
     throw std::runtime_error("wrong result.");
+  else
+    std::cout << "Correct result." << std::endl;
 }
 BENCHMARK(benchAsync)->Apply(Ex1Arguments)->UseRealTime();
 
